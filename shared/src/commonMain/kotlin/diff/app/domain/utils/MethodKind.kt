@@ -1,4 +1,4 @@
-package diff.app.domain.model
+package diff.app.domain.utils
 
 enum class MethodKind(val label: String, val order: Int) {
     EULER(label = "Усовершенствованный метод Эйлера", order = 2),

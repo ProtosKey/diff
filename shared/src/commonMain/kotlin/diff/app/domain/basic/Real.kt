@@ -1,4 +1,4 @@
-package diff.app.domain.utils
+package diff.app.domain.basic
 
 import diff.app.domain.model.Point
 
