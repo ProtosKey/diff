@@ -1,4 +1,4 @@
-package proxima.app.theme
+package diff.app.theme
 
 import androidx.compose.ui.graphics.Color
 

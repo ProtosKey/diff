@@ -1,4 +1,4 @@
-package proxima.app.theme
+package diff.app.theme
 
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.dp
