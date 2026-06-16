@@ -9,8 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsControllerCompat
-import proxima.app.App
-import proxima.app.di.initKoin
+import diff.app.App
+import diff.app.di.initKoin
 
 class AppActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,8 +18,8 @@ class AppActivity : ComponentActivity() {
         initKoin()
         enableEdgeToEdge()
         hideControls()
-        setContent { 
-            App(onThemeChanged = { ThemeChanged(it) }) 
+        setContent {
+            App(onThemeChanged = { ThemeChanged(it) })
         }
     }
 
