@@ -32,7 +32,9 @@ abstract class BaseViewModel(protected val store: MainStore) : ViewModel(), Have
     }
 
     fun solve() {
+        if (store.isLoading.value) return
         viewModelScope.launch(Dispatchers.Default) {
+            store.startLoading()
             try {
                 val storage = SolveAction.solve(store.form.value)
                 val problem = storage.problem
@@ -47,6 +49,8 @@ abstract class BaseViewModel(protected val store: MainStore) : ViewModel(), Have
                 showMessage(e.message ?: Defaults.exception(), MessageType.ERROR)
             } catch (e: Exception) {
                 showMessage(e.message ?: Defaults.exception(), MessageType.ERROR)
+            } finally {
+                store.endLoading()
             }
         }
     }

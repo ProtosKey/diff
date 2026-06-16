@@ -4,12 +4,14 @@ import androidx.lifecycle.viewModelScope
 import diff.app.data.MainStore
 import diff.app.domain.model.Point
 import diff.app.domain.model.Problem
+import diff.app.domain.model.SolveResult
 import diff.app.domain.utils.MethodKind
 import diff.app.presentation.basic.BaseViewModel
 import diff.app.presentation.mapper.DataMapper
 import diff.app.presentation.state.MainState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -20,14 +22,16 @@ class MainViewModel(store: MainStore) : BaseViewModel(store) {
     val notification = store.notification
 
     init {
-        store.storage.onEach { storage ->
+        combine(store.storage, store.isLoading) { storage, isLoading ->
+            storage to isLoading
+        }.onEach { (storage, isLoading) ->
             if (storage == null) {
-                _state.update { MainState() }
+                _state.update { MainState(isLoading = isLoading) }
                 return@onEach
             }
-            val solutions = storage.solutions.associate { solution ->
-                solution.method to solution.points.map(DataMapper::mapTo)
-            }
+            val solutions = storage.results
+                .filterIsInstance<SolveResult.Success>()
+                .associate { it.kind to it.solution.points.map(DataMapper::mapTo) }
             val visible = solutions.mapValues { (kind, _) ->
                 _state.value.visible[kind] ?: true
             }
@@ -37,6 +41,7 @@ class MainViewModel(store: MainStore) : BaseViewModel(store) {
                     solutions = solutions,
                     exact = exactDense,
                     visible = visible,
+                    isLoading = isLoading,
                 )
             }
         }.launchIn(viewModelScope)

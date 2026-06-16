@@ -6,6 +6,7 @@ import diff.app.presentation.basic.BaseViewModel
 import diff.app.presentation.state.ResultState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -16,15 +17,18 @@ class ResultViewModel(store: MainStore) : BaseViewModel(store) {
     val notification = store.notification
 
     init {
-        store.storage.onEach { storage ->
+        combine(store.storage, store.isLoading) { storage, isLoading ->
+            storage to isLoading
+        }.onEach { (storage, isLoading) ->
             if (storage == null) {
-                _state.update { ResultState() }
+                _state.update { ResultState(isLoading = isLoading) }
                 return@onEach
             }
             _state.update {
                 it.copy(
-                    solutions = storage.solutions.associateBy { solution -> solution.method },
+                    results = storage.results.associateBy { result -> result.kind },
                     exact = storage.exact,
+                    isLoading = isLoading,
                 )
             }
         }.launchIn(viewModelScope)
