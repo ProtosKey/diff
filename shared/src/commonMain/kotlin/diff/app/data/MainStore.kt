@@ -1,5 +1,6 @@
 package diff.app.data
 
+import diff.app.data.model.InputForm
 import diff.app.data.model.MessageType
 import diff.app.data.model.Notification
 import diff.app.data.model.Storage
@@ -31,6 +32,9 @@ object MainStore {
     private val _storage = MutableStateFlow<Storage?>(null)
     val storage = _storage.asStateFlow()
 
+    private val _Input_form = MutableStateFlow(InputForm())
+    val form = _Input_form.asStateFlow()
+
     private val _notification = MutableStateFlow(Notification())
     val notification = _notification.asStateFlow()
 
@@ -60,6 +64,10 @@ object MainStore {
 
     fun clearStorage() {
         _storage.update { null }
+    }
+
+    fun updateForm(value: InputForm) {
+        _Input_form.update { value }
     }
 
     fun showMessage(message: String, messageType: MessageType) {
