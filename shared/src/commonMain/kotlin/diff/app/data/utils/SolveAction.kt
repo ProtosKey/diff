@@ -15,17 +15,17 @@ import kotlin.math.round
 object SolveAction {
     fun solve(inputForm: InputForm): Storage {
         val problem = buildProblem(inputForm)
-        val solutions = SolverFactory.all.map { it.solve(problem) }
+        val results = SolverFactory.all.map { it.solve(problem) }
         val exact = sampleReal(problem)
-        return Storage(problem, solutions, exact)
+        return Storage(problem, results, exact)
     }
 
     private fun buildProblem(inputForm: InputForm): Problem {
-        val start = parse(inputForm.start, "x₀")
-        val end = parse(inputForm.end, "xₙ")
-        val initialY = parse(inputForm.initialY, "y₀")
-        val stepValue = parse(inputForm.step, "h")
-        val epsilonValue = parse(inputForm.epsilon, "ε")
+        val start = StringParser.parseDouble(inputForm.start, "x₀")
+        val end = StringParser.parseDouble(inputForm.end, "xₙ")
+        val initialY = StringParser.parseDouble(inputForm.initialY, "y₀")
+        val stepValue = StringParser.parseDouble(inputForm.step, "h")
+        val epsilonValue = StringParser.parseDouble(inputForm.epsilon, "ε")
         val equation = EquationFactory.all.getOrNull(inputForm.equationIndex)
             ?: throw InitException("Не выбрано уравнение")
         return Problem(
@@ -35,11 +35,6 @@ object SolveAction {
             step = Step(stepValue),
             epsilon = Epsilon(epsilonValue),
         )
-    }
-
-    private fun parse(value: String, name: String): Double {
-        return value.replace(',', '.').trim().toDoubleOrNull()
-            ?: throw InitException("$name: «$value» — не число")
     }
 
     private fun sampleReal(problem: Problem): List<Point> {

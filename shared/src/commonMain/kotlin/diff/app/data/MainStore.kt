@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-object MainStore {
+class MainStore {
     private val _equation = MutableStateFlow<Equation?>(null)
     val equation = _equation.asStateFlow()
 
@@ -37,6 +37,17 @@ object MainStore {
 
     private val _notification = MutableStateFlow(Notification())
     val notification = _notification.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
+
+    fun startLoading() {
+        _isLoading.update { true }
+    }
+
+    fun endLoading() {
+        _isLoading.update { false }
+    }
 
     fun updateEquation(value: Equation?) {
         _equation.update { value }
