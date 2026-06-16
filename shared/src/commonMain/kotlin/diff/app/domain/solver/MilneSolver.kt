@@ -4,6 +4,7 @@ import diff.app.domain.basic.Solve
 import diff.app.domain.model.Point
 import diff.app.domain.model.Problem
 import diff.app.domain.model.Solution
+import diff.app.domain.model.SolveResult
 import diff.app.domain.utils.MethodKind
 import kotlin.math.abs
 import kotlin.math.round
@@ -11,7 +12,7 @@ import kotlin.math.round
 class MilneSolver : Solve {
     override val kind: MethodKind = MethodKind.MILNE
 
-    override fun solve(problem: Problem): Solution {
+    override fun solve(problem: Problem): SolveResult {
         val step = problem.step.value
         val derivative = problem.equation.derivative
         val exact = problem.equation.real
@@ -25,6 +26,8 @@ class MilneSolver : Solve {
 
         bootstrapWithRungeKutta(problem, step, xValues, yValues)
         for (i in 0..3) slopes[i] = derivative.apply(xValues[i], yValues[i])
+
+        var maxCorrectorIterations = 0
 
         for (i in 3 until stepCount) {
             val predictor = yValues[i - 3] + 4.0 * step / 3.0 *
@@ -41,6 +44,15 @@ class MilneSolver : Solve {
                 iterations++
             } while (abs(yCurrent - yPrevious) > tolerance && iterations < MAX_CORRECTOR_ITER)
 
+            if (iterations >= MAX_CORRECTOR_ITER && abs(yCurrent - yPrevious) > tolerance) {
+                return SolveResult.Failure(
+                    kind = kind,
+                    message = "Корректор не сошёлся в узле i = ${i + 1} за $MAX_CORRECTOR_ITER итераций " +
+                        "(требовалась точность ε = $tolerance). Попробуйте уменьшить шаг h.",
+                )
+            }
+
+            if (iterations > maxCorrectorIterations) maxCorrectorIterations = iterations
             yValues[i + 1] = yCurrent
             slopes[i + 1] = derivative.apply(xValues[i + 1], yCurrent)
         }
@@ -54,7 +66,16 @@ class MilneSolver : Solve {
         val points = ArrayList<Point>(stepCount + 1).apply {
             for (i in 0..stepCount) add(Point(xValues[i], yValues[i]))
         }
-        return Solution(kind, points, step, maxError)
+        return SolveResult.Success(
+            Solution(
+                method = kind,
+                points = points,
+                step = step,
+                error = maxError,
+                iterations = maxCorrectorIterations,
+                ratio = 1,
+            ),
+        )
     }
 
     private fun bootstrapWithRungeKutta(

@@ -7,4 +7,6 @@ data class Solution(
     val points: List<Point>,
     val step: Double,
     val error: Double,
+    val iterations: Int,
+    val ratio: Int,
 )

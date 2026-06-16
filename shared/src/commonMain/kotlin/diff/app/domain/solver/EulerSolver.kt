@@ -4,6 +4,7 @@ import diff.app.domain.basic.Solve
 import diff.app.domain.model.Point
 import diff.app.domain.model.Problem
 import diff.app.domain.model.Solution
+import diff.app.domain.model.SolveResult
 import diff.app.domain.utils.MethodKind
 import kotlin.math.abs
 import kotlin.math.round
@@ -11,20 +12,44 @@ import kotlin.math.round
 class EulerSolver : Solve {
     override val kind: MethodKind = MethodKind.EULER
 
-    override fun solve(problem: Problem): Solution {
-        val step = problem.step.value
-        val points = integrate(problem, step)
-        val half = integrate(problem, step / 2.0)
-
+    override fun solve(problem: Problem): SolveResult {
+        val tolerance = problem.epsilon.value
         val denominator = (1 shl kind.order) - 1.0
-        var maxError = 0.0
-        for (i in points.indices) {
-            val halfIndex = 2 * i
-            if (halfIndex >= half.size) break
-            val error = abs(points[i].y - half[halfIndex].y) / denominator
-            if (error > maxError) maxError = error
+        val originalStep = problem.step.value
+        var coarseStep = originalStep
+        var coarse = integrate(problem, coarseStep)
+        var fine = integrate(problem, coarseStep / 2.0)
+        var runge = abs(coarse.last().y - fine.last().y) / denominator
+        var halvings = 0
+
+        while (runge > tolerance && halvings < MAX_HALVING) {
+            coarseStep /= 2.0
+            coarse = fine
+            fine = integrate(problem, coarseStep / 2.0)
+            runge = abs(coarse.last().y - fine.last().y) / denominator
+            halvings++
         }
-        return Solution(kind, points, step, maxError)
+
+        if (runge > tolerance) {
+            return SolveResult.Failure(
+                kind = kind,
+                message = "Не удалось достичь точности ε = $tolerance за $MAX_HALVING половинений шага. " +
+                    "Текущая оценка по Рунге: $runge",
+            )
+        }
+
+        val finalStep = coarseStep / 2.0
+        val ratio = round(originalStep / finalStep).toInt().coerceAtLeast(1)
+        return SolveResult.Success(
+            Solution(
+                method = kind,
+                points = fine,
+                step = finalStep,
+                error = runge,
+                iterations = halvings,
+                ratio = ratio,
+            ),
+        )
     }
 
     private fun integrate(problem: Problem, step: Double): List<Point> {
@@ -44,5 +69,9 @@ class EulerSolver : Solve {
             result.add(Point(xValue, yValue))
         }
         return result
+    }
+
+    private companion object {
+        const val MAX_HALVING = 15
     }
 }
