@@ -149,8 +149,14 @@ fun Graph(
             1.dp.toPx(),
         )
 
-        drawText(textMeasurer, "Y", Offset(zeroPos.x + 10f, 10f), axisLabelStyle)
-        drawText(textMeasurer, "X", Offset(size.width - 40f, zeroPos.y - 55f), axisLabelStyle)
+        val yLabelLeft = zeroPos.x + 10f
+        if (yLabelLeft in 0f..size.width) {
+            drawText(textMeasurer, "Y", Offset(yLabelLeft, 10f), axisLabelStyle)
+        }
+        val xLabelTop = zeroPos.y - 55f
+        if (xLabelTop in 0f..size.height) {
+            drawText(textMeasurer, "X", Offset(size.width - 40f, xLabelTop), axisLabelStyle)
+        }
 
         val dotRadius = 5.dp.toPx()
         val dotHole = 3.dp.toPx()
