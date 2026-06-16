@@ -5,6 +5,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import diff.app.domain.model.SolveResult
@@ -16,6 +20,11 @@ private val methodOrder = listOf(MethodKind.EULER, MethodKind.RUNGE, MethodKind.
 
 @Composable
 fun ResultsContent(state: ResultState, fabHeight: Dp) {
+    val problem = state.problem ?: return
+    val hasHalving = state.results.values.any {
+        it is SolveResult.Success && it.solution.ratio > 1
+    }
+    var showAll by rememberSaveable { mutableStateOf(false) }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(LocalAppDimens.current.paddingSmall),
@@ -24,6 +33,11 @@ fun ResultsContent(state: ResultState, fabHeight: Dp) {
             bottom = fabHeight + LocalAppDimens.current.paddingLarge,
         ),
     ) {
+        if (hasHalving) {
+            item(key = "toggle") {
+                PointsToggleCard(showAll = showAll, onShowAllChange = { showAll = it })
+            }
+        }
         methodOrder.forEach { kind ->
             val result = state.results[kind] ?: return@forEach
             item(key = kind) {
@@ -31,7 +45,8 @@ fun ResultsContent(state: ResultState, fabHeight: Dp) {
                     is SolveResult.Success -> MethodSection(
                         kind = kind,
                         solution = result.solution,
-                        exact = state.exact,
+                        problem = problem,
+                        showAll = showAll,
                     )
                     is SolveResult.Failure -> MethodErrorCard(
                         kind = kind,

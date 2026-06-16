@@ -28,6 +28,7 @@ class ResultViewModel(store: MainStore) : BaseViewModel(store) {
                 it.copy(
                     results = storage.results.associateBy { result -> result.kind },
                     exact = storage.exact,
+                    problem = storage.problem,
                     isLoading = isLoading,
                 )
             }

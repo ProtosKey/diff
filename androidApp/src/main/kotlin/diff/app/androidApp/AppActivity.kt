@@ -1,4 +1,4 @@
-package proxima.app.androidApp
+package diff.app.androidApp
 
 import android.app.Activity
 import android.os.Bundle

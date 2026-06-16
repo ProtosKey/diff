@@ -7,14 +7,14 @@ plugins {
 }
 
 android {
-    namespace = "proxima.app.androidApp"
+    namespace = "diff.app.androidApp"
     compileSdk = 36
 
     defaultConfig {
         minSdk = 24
         targetSdk = 36
 
-        applicationId = "interpolation.app.androidApp"
+        applicationId = "diff.app.androidApp"
         versionCode = 1
         versionName = "1.0.0"
     }

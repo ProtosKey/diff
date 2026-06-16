@@ -18,7 +18,12 @@ import androidx.compose.ui.text.font.FontWeight
 import diff.app.theme.LocalAppDimens
 
 @Composable
-fun MethodHeader(color: Color, label: String, error: Double) {
+fun MethodHeader(
+    color: Color,
+    label: String,
+    error: Double,
+    iterations: Int,
+) {
     Column(
         verticalArrangement = Arrangement.spacedBy(LocalAppDimens.current.paddingTiny),
     ) {
@@ -36,10 +41,17 @@ fun MethodHeader(color: Color, label: String, error: Double) {
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f),
             )
         }
         Text(
             text = "ε = ${format(error)}",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontFamily = FontFamily.Monospace,
+        )
+        Text(
+            text = "Итераций: $iterations",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontFamily = FontFamily.Monospace,

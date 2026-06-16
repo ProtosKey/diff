@@ -4,10 +4,10 @@
     <application
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
-        android:label="Nodal"
+        android:label="Diff"
         android:theme="@android:style/Theme.Material.NoActionBar">
         <activity
-            android:name=".AppActivity"
+            android:name="diff.app.androidApp.AppActivity"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:launchMode="singleInstance"
             android:windowSoftInputMode="adjustPan"
