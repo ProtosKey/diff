@@ -30,6 +30,7 @@ import diff.app.view.component.Message
 import diff.app.view.component.NavigationBar
 import diff.app.view.component.Title
 import diff.app.view.feature.main.component.Graph
+import diff.app.view.feature.main.component.MethodLegend
 
 class MainScreen : Screen {
     @Composable
@@ -66,10 +67,16 @@ class MainScreen : Screen {
                             help = "Нажмите «Решить» на странице ввода",
                             icon = Icons.Default.ShowChart,
                         )
-                        else -> Graph(
-                            state = state,
-                            modifier = Modifier.fillMaxSize(),
-                        )
+                        else -> {
+                            MethodLegend(
+                                state = state,
+                                onToggle = { viewModel.toggleVisibility(it) },
+                            )
+                            Graph(
+                                state = state,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
                     }
                 }
 
