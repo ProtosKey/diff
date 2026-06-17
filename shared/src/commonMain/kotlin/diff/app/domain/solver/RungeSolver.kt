@@ -18,23 +18,25 @@ class RungeSolver : Solve {
         val originalStep = problem.step.value
         var coarseStep = originalStep
         var coarse = integrate(problem, coarseStep)
+            ?: return SolveResult.Failure(kind, "Слишком большое количество точек")
         var fine = integrate(problem, coarseStep / 2.0)
+            ?: return SolveResult.Failure(kind, "Слишком большое количество точек")
         var runge = abs(coarse.last().y - fine.last().y) / denominator
-        var halvings = 0
+        var halving = 0
 
-        while (runge > tolerance && halvings < MAX_HALVING) {
+        while (runge > tolerance && halving < MAX_HALVING) {
             coarseStep /= 2.0
             coarse = fine
-            fine = integrate(problem, coarseStep / 2.0)
+            val nextFine = integrate(problem, coarseStep / 2.0) ?: break
+            fine = nextFine
             runge = abs(coarse.last().y - fine.last().y) / denominator
-            halvings++
+            halving++
         }
 
         if (runge > tolerance) {
             return SolveResult.Failure(
                 kind = kind,
-                message = "Не удалось достичь точности ε = $tolerance за $MAX_HALVING половинений шага. " +
-                    "Текущая оценка по Рунге: $runge",
+                message = "Не удалось достичь заданной точности"
             )
         }
 
@@ -46,15 +48,16 @@ class RungeSolver : Solve {
                 points = fine,
                 step = finalStep,
                 error = runge,
-                iterations = halvings,
+                iterations = halving,
                 ratio = ratio,
             ),
         )
     }
 
-    private fun integrate(problem: Problem, step: Double): List<Point> {
+    private fun integrate(problem: Problem, step: Double): List<Point>? {
         val derivative = problem.equation.derivative
         val stepCount = round(problem.interval.length / step).toInt()
+        if (stepCount > MAX_NODES) return null
         val result = ArrayList<Point>(stepCount + 1)
         var xValue = problem.point.x
         var yValue = problem.point.y
@@ -72,6 +75,7 @@ class RungeSolver : Solve {
     }
 
     private companion object {
-        const val MAX_HALVING = 15
+        const val MAX_HALVING = 10
+        const val MAX_NODES = 100_000
     }
 }

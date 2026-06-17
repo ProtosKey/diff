@@ -19,6 +19,10 @@ class MilneSolver : Solve {
         val stepCount = round(problem.interval.length / step).toInt()
         val tolerance = problem.epsilon.value
 
+        if (stepCount > MAX_NODES) {
+            return SolveResult.Failure(kind, "Слишком большое количество точек")
+        }
+
         val xValues = DoubleArray(stepCount + 1) { i -> problem.point.x + i * step }
         val yValues = DoubleArray(stepCount + 1)
         val slopes = DoubleArray(stepCount + 1)
@@ -47,8 +51,7 @@ class MilneSolver : Solve {
             if (iterations >= MAX_CORRECTOR_ITER && abs(yCurrent - yPrevious) > tolerance) {
                 return SolveResult.Failure(
                     kind = kind,
-                    message = "Корректор не сошёлся в узле i = ${i + 1} за $MAX_CORRECTOR_ITER итераций " +
-                        "(требовалась точность ε = $tolerance). Попробуйте уменьшить шаг h.",
+                    message = "Не удалось достичь заданной точности"
                 )
             }
 
@@ -62,6 +65,11 @@ class MilneSolver : Solve {
             val error = abs(exact.apply(xValues[i], problem.point) - yValues[i])
             if (error > maxError) maxError = error
         }
+        /*
+        if (maxError > tolerance) {
+            return SolveResult.Failure(kind, "Не удалось достичь заданной точности")
+        }
+         */
 
         val points = ArrayList<Point>(stepCount + 1).apply {
             for (i in 0..stepCount) add(Point(xValues[i], yValues[i]))
@@ -99,6 +107,7 @@ class MilneSolver : Solve {
     }
 
     private companion object {
-        const val MAX_CORRECTOR_ITER = 50
+        const val MAX_CORRECTOR_ITER = 10
+        const val MAX_NODES = 100_000
     }
 }
