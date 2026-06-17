@@ -61,54 +61,59 @@ class InputScreen : Screen {
                     .padding(horizontal = LocalAppDimens.current.paddingMedium),
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(bottom = fabHeight + LocalAppDimens.current.paddingLarge),
-                    verticalArrangement = Arrangement.spacedBy(LocalAppDimens.current.paddingSmall),
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(LocalAppDimens.current.paddingTiny),
                 ) {
                     Title(label = "Ввод")
 
-                    FieldLabel("Уравнение")
-                    ChipGrid(
-                        maxLines = 3,
-                        horizontalSpacing = LocalAppDimens.current.paddingSmall,
-                        verticalSpacing = LocalAppDimens.current.paddingSmall,
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(bottom = fabHeight + LocalAppDimens.current.paddingLarge),
+                        verticalArrangement = Arrangement.spacedBy(LocalAppDimens.current.paddingTiny),
                     ) {
-                        EquationFactory.all.forEachIndexed { index, equation ->
-                            EquationChip(
-                                label = equation.title,
-                                selected = form.equationIndex == index,
-                                onClick = { viewModel.updateEquationIndex(index) },
-                            )
+                        FieldLabel("Уравнение")
+                        ChipGrid(
+                            maxLines = 3,
+                            horizontalSpacing = LocalAppDimens.current.paddingSmall,
+                            verticalSpacing = LocalAppDimens.current.paddingSmall,
+                        ) {
+                            EquationFactory.all.forEachIndexed { index, equation ->
+                                EquationChip(
+                                    label = equation.title,
+                                    selected = form.equationIndex == index,
+                                    onClick = { viewModel.updateEquationIndex(index) },
+                                )
+                            }
                         }
-                    }
 
-                    NumberField(
-                        label = "Левая граница",
-                        value = form.start,
-                        onValueChange = viewModel::updateStart,
-                    )
-                    NumberField(
-                        label = "Правая граница",
-                        value = form.end,
-                        onValueChange = viewModel::updateEnd,
-                    )
-                    NumberField(
-                        label = "Начальное значение",
-                        value = form.initialY,
-                        onValueChange = viewModel::updateInitialY,
-                    )
-                    NumberField(
-                        label = "Шаг",
-                        value = form.step,
-                        onValueChange = viewModel::updateStep,
-                    )
-                    NumberField(
-                        label = "Точность",
-                        value = form.epsilon,
-                        onValueChange = viewModel::updateEpsilon,
-                    )
+                        NumberField(
+                            label = "Левая граница",
+                            value = form.start,
+                            onValueChange = viewModel::updateStart,
+                        )
+                        NumberField(
+                            label = "Правая граница",
+                            value = form.end,
+                            onValueChange = viewModel::updateEnd,
+                        )
+                        NumberField(
+                            label = "Начальное значение",
+                            value = form.initialY,
+                            onValueChange = viewModel::updateInitialY,
+                        )
+                        NumberField(
+                            label = "Шаг",
+                            value = form.step,
+                            onValueChange = viewModel::updateStep,
+                        )
+                        NumberField(
+                            label = "Точность",
+                            value = form.epsilon,
+                            onValueChange = viewModel::updateEpsilon,
+                        )
+                    }
                 }
 
                 Message(
