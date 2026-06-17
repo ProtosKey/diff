@@ -45,7 +45,7 @@ private fun scanWidest(
         format(point.x),
         format(point.y),
         format(exactY),
-        format(abs(exactY - point.y)),
+        formatScientific(abs(exactY - point.y)),
     )
     for (k in parts.indices) if (parts[k].length > widest[k].length) widest[k] = parts[k]
 }
@@ -92,7 +92,7 @@ fun MethodTable(points: List<Point>, problem: Problem) {
             val headerPx = measurer.measure(TABLE_HEADERS[k], headerStyle).size.width
             val dataPx = if (widest[k].isEmpty()) 0
             else measurer.measure(widest[k], bodyStyle).size.width
-            with(density) { maxOf(headerPx, dataPx).toDp() }
+            with(density) { maxOf(headerPx, dataPx).toDp() + 4.dp }
         }
     }
 

@@ -25,6 +25,6 @@ fun TableDataRow(
         DataCell(format(x), Modifier.width(widths.getOrElse(1) { 0.dp }))
         DataCell(format(methodY), Modifier.width(widths.getOrElse(2) { 0.dp }))
         DataCell(format(exactY), Modifier.width(widths.getOrElse(3) { 0.dp }))
-        DataCell(format(abs(exactY - methodY)), Modifier.width(widths.getOrElse(4) { 0.dp }))
+        DataCell(formatScientific(abs(exactY - methodY)), Modifier.width(widths.getOrElse(4) { 0.dp }))
     }
 }

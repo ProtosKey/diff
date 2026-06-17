@@ -45,13 +45,13 @@ fun MethodHeader(
             )
         }
         Text(
-            text = "Точность = ${format(error)}",
+            text = "Точность: ${formatScientific(error)}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontFamily = FontFamily.Monospace,
         )
         Text(
-            text = "Итераций: $iterations",
+            text = "Итераций: ${iterations + 1}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontFamily = FontFamily.Monospace,
