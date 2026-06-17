@@ -2,21 +2,20 @@ package diff.app.view.feature.result.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import diff.app.theme.LocalAppDimens
 
 @Composable
-fun TableHeaderRow() {
+fun TableHeaderRow(widths: List<Dp>) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(LocalAppDimens.current.paddingTiny),
     ) {
-        HeaderCell("i", weight = 0.5f)
-        HeaderCell("x", weight = 1f)
-        HeaderCell("y", weight = 1.4f)
-        HeaderCell("Точное", weight = 1.4f)
-        HeaderCell("|Δ|", weight = 1.2f)
+        TABLE_HEADERS.forEachIndexed { index, header ->
+            HeaderCell(header, Modifier.width(widths.getOrElse(index) { 0.dp }))
+        }
     }
 }

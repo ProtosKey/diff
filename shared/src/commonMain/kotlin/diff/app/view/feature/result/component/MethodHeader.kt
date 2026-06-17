@@ -45,7 +45,7 @@ fun MethodHeader(
             )
         }
         Text(
-            text = "ε = ${format(error)}",
+            text = "Точность = ${format(error)}",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontFamily = FontFamily.Monospace,

@@ -43,14 +43,14 @@ class ResultScreen : Screen {
         val viewModel = viewModel<ResultViewModel>(factory = factory { ResultViewModel(store) })
         val state by viewModel.state.collectAsStateWithLifecycle()
         val message by viewModel.notification.collectAsStateWithLifecycle()
-        var fabHeight by remember { mutableStateOf(0.dp) }
+        var height by remember { mutableStateOf(0.dp) }
 
         Scaffold(
             bottomBar = { NavigationBar(navigator) },
             floatingActionButton = {
                 SolveFab(
                     onClick = { viewModel.solve() },
-                    onMeasured = { fabHeight = it },
+                    onMeasured = { height = it },
                 )
             },
         ) { padding ->
@@ -77,7 +77,7 @@ class ResultScreen : Screen {
                             help = "Нажмите «Решить»",
                             icon = Icons.Default.QueryStats,
                         )
-                        else -> ResultsContent(state, fabHeight)
+                        else -> ResultsContent(state, height)
                     }
                 }
 
@@ -85,7 +85,7 @@ class ResultScreen : Screen {
                     message = message.message,
                     isVisible = message.isVisible,
                     onClick = { viewModel.hideMessage() },
-                    bottom = fabHeight,
+                    bottom = height,
                     type = message.messageType,
                 )
             }
