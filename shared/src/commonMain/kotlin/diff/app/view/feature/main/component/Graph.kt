@@ -24,8 +24,8 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import diff.app.domain.model.Point
 import diff.app.domain.utils.MethodKind
-import diff.app.presentation.model.PointData
 import diff.app.presentation.state.MainState
 import diff.app.theme.realColor
 import diff.app.theme.methodColor
@@ -38,21 +38,31 @@ import kotlin.math.pow
 import kotlin.math.round
 
 private data class Bounds(
-    val minHor: Float,
-    val maxHor: Float,
-    val minVer: Float,
-    val maxVer: Float,
+    val minHor: Double,
+    val maxHor: Double,
+    val minVer: Double,
+    val maxVer: Double,
 )
 
+private const val MAX_Y_ASPECT = 5.0
+private const val OFFSCREEN = 1_000_000.0
+
 private fun computeBounds(state: MainState): Bounds {
-    val all = state.exact + state.solutions.values.flatten()
-    if (all.isEmpty()) return Bounds(-10f, 10f, -10f, 10f)
-    val minX = all.minOf { it.x }
-    val maxX = all.maxOf { it.x }
-    val minY = all.minOf { it.y }
-    val maxY = all.maxOf { it.y }
-    val padX = (maxX - minX).coerceAtLeast(1f) * 0.1f
-    val padY = (maxY - minY).coerceAtLeast(1f) * 0.1f
+    val finite = (state.exact + state.solutions.values.flatten())
+        .filter { it.x.isFinite() && it.y.isFinite() }
+    if (finite.isEmpty()) return Bounds(-10.0, 10.0, -10.0, 10.0)
+
+    val minX = finite.minOf { it.x }
+    val maxX = finite.maxOf { it.x }
+    val minY = finite.minOf { it.y }
+    val rawMaxY = finite.maxOf { it.y }
+
+    val xRange = (maxX - minX).coerceAtLeast(1.0)
+    val yAspectCap = minY + xRange * MAX_Y_ASPECT
+    val maxY = minOf(rawMaxY, yAspectCap)
+
+    val padX = xRange * 0.1
+    val padY = (maxY - minY).coerceAtLeast(1.0) * 0.1
     return Bounds(minX - padX, maxX + padX, minY - padY, maxY + padY)
 }
 
@@ -75,14 +85,14 @@ fun Graph(
 
     val padding = 80f
 
-    fun toMath(offset: Offset): Offset {
+    fun toMath(offset: Offset): Pair<Double, Double> {
         val dw = canvasSize.x - padding * 2
         val dh = canvasSize.y - padding * 2
         val mx = ((offset.x - panOffset.x) / zoom - padding) / dw *
             (bounds.maxHor - bounds.minHor) + bounds.minHor
         val my = bounds.maxVer - (((offset.y - panOffset.y) / zoom - padding) / dh *
             (bounds.maxVer - bounds.minVer))
-        return Offset(mx, my)
+        return mx to my
     }
 
     val textMeasurer = rememberTextMeasurer()
@@ -113,23 +123,25 @@ fun Graph(
         val drawWidth = size.width - padding * 2
         val drawHeight = size.height - padding * 2
 
-        fun toOffset(mathX: Float, mathY: Float): Offset {
+        fun toOffset(mathX: Double, mathY: Double): Offset {
             val xProgress = (mathX - bounds.minHor) / (bounds.maxHor - bounds.minHor)
             val yProgress = (bounds.maxVer - mathY) / (bounds.maxVer - bounds.minVer)
-            val base = Offset(padding + xProgress * drawWidth, padding + yProgress * drawHeight)
+            val px = (padding + xProgress * drawWidth).coerceIn(-OFFSCREEN, OFFSCREEN)
+            val py = (padding + yProgress * drawHeight).coerceIn(-OFFSCREEN, OFFSCREEN)
+            val base = Offset(px.toFloat(), py.toFloat())
             return base * zoom + panOffset
         }
 
-        val topLeftM = toMath(Offset.Zero)
-        val bottomRightM = toMath(Offset(size.width, size.height))
+        val (topLeftMx, topLeftMy) = toMath(Offset.Zero)
+        val (bottomRightMx, bottomRightMy) = toMath(Offset(size.width, size.height))
 
-        val zeroPos = toOffset(0f, 0f)
+        val zeroPos = toOffset(0.0, 0.0)
 
         drawGrid(
-            minHorizon = min(topLeftM.x, bottomRightM.x),
-            maxHorizon = max(topLeftM.x, bottomRightM.x),
-            minVertical = min(topLeftM.y, bottomRightM.y),
-            maxVertical = max(topLeftM.y, bottomRightM.y),
+            minHorizon = min(topLeftMx, bottomRightMx),
+            maxHorizon = max(topLeftMx, bottomRightMx),
+            minVertical = min(topLeftMy, bottomRightMy),
+            maxVertical = max(topLeftMy, bottomRightMy),
             color = colors.outlineVariant.copy(alpha = .4f),
             measurer = textMeasurer,
             style = labelStyle,
@@ -176,29 +188,36 @@ fun Graph(
 }
 
 private fun DrawScope.drawPoints(
-    points: List<PointData>,
+    points: List<Point>,
     color: Color,
     radius: Float,
     holeRadius: Float,
-    toOffset: (Float, Float) -> Offset,
+    toOffset: (Double, Double) -> Offset,
 ) {
     points.forEach { point ->
+        if (!point.x.isFinite() || !point.y.isFinite()) return@forEach
         val center = toOffset(point.x, point.y)
+        if (!center.x.isFinite() || !center.y.isFinite()) return@forEach
         drawCircle(color = color, radius = radius, center = center)
         drawCircle(color = Color.White, radius = holeRadius, center = center)
     }
 }
 
 private fun DrawScope.drawPolyline(
-    points: List<PointData>,
+    points: List<Point>,
     color: Color,
     width: Float,
-    toOffset: (Float, Float) -> Offset,
+    toOffset: (Double, Double) -> Offset,
 ) {
     val path = Path()
     var first = true
     points.forEach { point ->
+        if (!point.x.isFinite() || !point.y.isFinite()) return@forEach
         val pos = toOffset(point.x, point.y)
+        if (!pos.x.isFinite() || !pos.y.isFinite()) {
+            first = true
+            return@forEach
+        }
         if (first) path.moveTo(pos.x, pos.y) else path.lineTo(pos.x, pos.y)
         first = false
     }
@@ -206,25 +225,25 @@ private fun DrawScope.drawPolyline(
 }
 
 private fun DrawScope.drawGrid(
-    minHorizon: Float,
-    maxHorizon: Float,
-    minVertical: Float,
-    maxVertical: Float,
+    minHorizon: Double,
+    maxHorizon: Double,
+    minVertical: Double,
+    maxVertical: Double,
     color: Color,
     measurer: TextMeasurer,
     style: TextStyle,
-    offset: (Float, Float) -> Offset,
+    offset: (Double, Double) -> Offset,
     stroke: Dp = 1.dp,
 ) {
-    val horizon = gridStep((maxHorizon - minHorizon) / 8)
-    val vertical = gridStep((maxVertical - minVertical) / 16)
+    val horizon = gridStep((maxHorizon - minHorizon) / 8.0)
+    val vertical = gridStep((maxVertical - minVertical) / 16.0)
     val precisionX = precisionFor(horizon)
     val precisionY = precisionFor(vertical)
 
     var current = floor(minHorizon / horizon) * horizon
     while (current <= maxHorizon + horizon) {
-        val value = offset(current, 0f).x
-        if (value in 0f..size.width) {
+        val value = offset(current, 0.0).x
+        if (value.isFinite() && value in 0f..size.width) {
             drawLine(
                 color = color,
                 start = Offset(value, 0f),
@@ -243,8 +262,8 @@ private fun DrawScope.drawGrid(
 
     var currentVertical = floor(minVertical / vertical) * vertical
     while (currentVertical <= maxVertical + vertical) {
-        val canvasY = offset(0f, currentVertical).y
-        if (canvasY in 0f..size.height) {
+        val canvasY = offset(0.0, currentVertical).y
+        if (canvasY.isFinite() && canvasY in 0f..size.height) {
             drawLine(
                 color = color,
                 start = Offset(0f, canvasY),
@@ -262,24 +281,24 @@ private fun DrawScope.drawGrid(
     }
 }
 
-private fun gridStep(step: Float): Float {
-    if (step <= 0f) return 1f
-    val magnitude = 10.0.pow(floor(log10(step.toDouble()))).toFloat()
+private fun gridStep(step: Double): Double {
+    if (step <= 0.0) return 1.0
+    val magnitude = 10.0.pow(floor(log10(step)))
     val ratio = step / magnitude
     return magnitude * when {
-        ratio < 1.5f -> 1f
-        ratio < 3.5f -> 2f
-        ratio < 7.5f -> 5f
-        else -> 10f
+        ratio < 1.5 -> 1.0
+        ratio < 3.5 -> 2.0
+        ratio < 7.5 -> 5.0
+        else -> 10.0
     }
 }
 
-private fun precisionFor(step: Float): Int {
-    if (step >= 1f) return 0
-    return (-floor(log10(step.toDouble()))).toInt().coerceIn(0, 8)
+private fun precisionFor(step: Double): Int {
+    if (step >= 1.0) return 0
+    return (-floor(log10(step))).toInt().coerceIn(0, 8)
 }
 
-private fun format(value: Float, precision: Int): String {
+private fun format(value: Double, precision: Int): String {
     if (precision <= 0) {
         val rounded = round(value).toLong()
         if (rounded == 0L) return "0"
